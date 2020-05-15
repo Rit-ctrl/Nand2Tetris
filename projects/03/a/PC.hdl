@@ -17,4 +17,18 @@ CHIP PC {
 
     PARTS:
     // Put your code here:
+ 
+    Mux16(a=in,b=false,sel=reset,out=s1);  //set to 0 or in
+    
+    Or(a=reset,b=load,out=c1);       //check if any of reset or load is set
+    Mux16(a=outtplusone,b=s1,sel=c1,out=regval); //if so change the register value else leave the predetermined value from previous state to continue
+    
+    Or(a=c1,b=inc,out=c2); //check if load or inc or reset flag are set
+    
+    
+    Register(in=regval,load=c2,out=outt,out=out); //if yes use the new value else use the predetermined value from previous state 
+    
+    Inc16(in=outt,out=i);
+    Mux16(a=outt,b=i,sel=inc,out=outtplusone); //out_t_plus_one is the determined register's value for next state unless it is overwritten by any flags,Here we are incrementing the value if inc is set else just passing over the current output as such 
+    
 }
