@@ -28,4 +28,23 @@ CHIP Memory {
 
     PARTS:
     // Put your code here:
+	//selecting between Ram or i/o memory 0 to 16k is ram 16k to 24k is screen address 0x6000 is keyboard
+	DMux(in=load,sel=address[14],a=ram,b=kborscreen);
+
+	RAM16K(in=in,load=ram,address=address[0..13],out=out1);
+
+	//selecting between kb or screen
+	DMux(in=kborscreen,sel=address[13],a=screenld,b=kb);
+
+	Screen(in=in,load=screenld,address=address[0..12],out=out2);
+	Keyboard(out=kbout);
+	//we need to choose this output only if address 0x6000 is selected otherwise invalid. So check if address is 0x6000
+	Or8Way(in=address[0..7],out=t1);
+	Or8Way(in[0..4]=address[8..12],in[5..7]=false,out=t2);
+	Or(a=t1,b=t2,out=itsnotkbd);
+	Mux16(a=kbout,b=false,sel=itsnotkbd,out=out3);
+
+	Mux16(a=out2,b=out3,sel=address[13],out=outio);  //selecting between kb and screen
+	Mux16(a=out1,b=outio,sel=address[14],out=out);		//selecting between ram or i/o
+	
 }

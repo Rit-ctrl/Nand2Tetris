@@ -40,4 +40,44 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+	Mux16(a=instruction,b=ALUOutput,sel=instruction[15],out=Aregin);  //select input for A register depending on A instruction or C instruction
+	
+	Not(in=instruction[15],out=notins); // when it is A instruction
+
+	Or(a=notins,b=instruction[5],out=Aload);
+	ARegister(in=Aregin,load=Aload,out=Aout,out[0..14]=addressM);
+
+	Mux16(a=Aout,b=inM,sel=instruction[12],out=AorM); 
+
+	//when c ins compute ALU or just give D value
+	And(a=instruction[15],b=instruction[11],out=zx);
+	And(a=instruction[15],b=instruction[10],out=nx);
+	Or(a=notins,b=instruction[9],out=zy);
+	Or(a=notins,b=instruction[8],out=ny);
+	And(a=instruction[15],b=instruction[7],out=f);
+	And(a=instruction[15],b=instruction[6],out=no);
+
+	And(a=instruction[15],b=instruction[4],out=Dload);
+	DRegister(in=ALUOutput,load=Dload,out=ALUx);
+
+	ALU(x=ALUx,y=AorM,zx=zx,nx=nx,zy=zy,ny=ny,f=f,no=no,out=outM,out=ALUOutput,zr=zero,ng=neg);	
+
+	And(a=instruction[15],b=instruction[3],out=writeM);
+
+	//for jump flags -> number positive
+	Or(a=zero,b=neg,out=nonpositive);
+	Not(in=nonpositive,out=positive); //positive OMG
+
+	And(a=instruction[0],b=positive,out=j0);
+	And(a=instruction[1],b=zero,out=j1);
+	And(a=instruction[2],b=neg,out=j2);
+
+	Or(a=j0,b=j1,out=j01);
+	Or(a=j01,b=j2,out=j012); //if any flag is set
+
+	And(a=j012,b=instruction[15],out=loadjump);
+	
+	PC(in=Aout,load=loadjump,inc=true,reset=reset,out[0..14]=pc);
+
+	
 }
